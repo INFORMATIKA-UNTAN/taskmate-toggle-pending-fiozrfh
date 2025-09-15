@@ -77,6 +77,7 @@ export default function HomeScreen() {
     if (activeFilter === 'all') {
       return tasks;
     }
+    // Logika ini sudah bisa menangani 'todo' dan 'pending'
     const statusToFilter = activeFilter === 'done' ? 'done' : 'pending';
     return tasks.filter(task => task.status === statusToFilter);
   }, [tasks, activeFilter]); // Dijalankan ulang hanya jika tasks atau activeFilter berubah
@@ -109,6 +110,8 @@ export default function HomeScreen() {
       <View style={styles.filterContainer}>
         <FilterButton title="All" filter="all" />
         <FilterButton title="Todo" filter="todo" />
+        {/* TAMBAHKAN TOMBOL INI */}
+        <FilterButton title="Pending" filter="pending" /> 
         <FilterButton title="Done" filter="done" />
       </View>
 
@@ -130,7 +133,7 @@ export default function HomeScreen() {
   );
 }
 
-// Stylesheet
+// Stylesheet (Tidak ada perubahan)
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
   header: {

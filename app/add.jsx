@@ -24,26 +24,18 @@ export default function AddTaskScreen() {
     }
 
     try {
-      // 1. Muat tugas yang sudah ada dari AsyncStorage
       const existingTasks = await loadTasks();
-
-      // 2. Buat objek tugas baru
       const newTask = {
         id: uuidv4(),
         title: title.trim(),
         description: desc.trim(),
-        category: 'Umum', // Kategori default
-        deadline: '2025-09-30', // Tanggal default
-        status: 'pending',
+        category: 'Umum',
+        deadline: '2025-09-30',
+        // Status diatur ke 'pending' secara otomatis
+        status: 'pending', 
       };
-
-      // 3. Gabungkan tugas lama dengan tugas baru
       const updatedTasks = [...existingTasks, newTask];
-
-      // 4. Simpan kembali semua tugas ke AsyncStorage
       await saveTasks(updatedTasks);
-
-      // 5. Kembali ke halaman utama
       router.replace('/');
     } catch (error) {
       console.error(error);
