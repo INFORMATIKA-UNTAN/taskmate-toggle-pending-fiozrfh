@@ -31,7 +31,7 @@
 
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
-// Fungsi untuk menentukan warna badge berdasarkan kategori
+// Fungsi untuk menentukan warna badge berdasarkan kategori (dipertahankan)
 const getCategoryStyle = (category) => {
   switch (category) {
     case 'Mobile':
@@ -41,35 +41,49 @@ const getCategoryStyle = (category) => {
     case 'IoT':
       return { backgroundColor: '#ffedd5', color: '#f97316' }; // Oranye Muda
     default:
-      return { backgroundColor: '#e2e8f0', color: '#475569' }; // Abu-abu
+      return { backgroundColor: '#e2e8f0', color: '#475569' }; // Abu-abu (Umum)
   }
 };
 
-export default function TaskItem({ task, onToggle }) {
+// Komponen TaskItem sekarang menerima prop onDelete
+export default function TaskItem({ task, onToggle, onDelete }) {
   const isDone = task.status === 'done';
-  const categoryStyle = getCategoryStyle(task.category);
+  // Menggunakan fallback 'Umum' jika kategori tidak ada
+  const categoryName = task.category ?? 'Umum';
+  const categoryStyle = getCategoryStyle(categoryName);
 
   return (
-    <TouchableOpacity onPress={() => onToggle?.(task)} activeOpacity={0.7}>
-      <View style={[styles.card, isDone && styles.cardDone]}>
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.title, isDone && styles.strike]}>{task.title}</Text>
+    <View style={[styles.card, isDone && styles.cardDone]}>
+      {/* Bagian utama yang bisa diklik untuk toggle status */}
+      <TouchableOpacity onPress={() => onToggle?.(task)} style={{ flex: 1 }} activeOpacity={0.7}>
+        <Text style={[styles.title, isDone && styles.strike]}>{task.title}</Text>
+        
+        {/* Deskripsi hanya ditampilkan jika ada isinya */}
+        {!!task.description && (
           <Text style={styles.desc}>{task.description}</Text>
-          {/* Bagian meta diubah untuk menampilkan badge dan tanggal */}
-          <View style={styles.footer}>
-            <View style={[styles.categoryBadge, { backgroundColor: categoryStyle.backgroundColor }]}>
-              <Text style={[styles.categoryText, { color: categoryStyle.color }]}>{task.category}</Text>
-            </View>
-            <Text style={styles.meta}>Due {task.deadline}</Text>
+        )}
+
+        <View style={styles.footer}>
+          <View style={[styles.categoryBadge, { backgroundColor: categoryStyle.backgroundColor }]}>
+            <Text style={[styles.categoryText, { color: categoryStyle.color }]}>{categoryName}</Text>
           </View>
+          <Text style={styles.meta}>Due {task.deadline}</Text>
         </View>
+      </TouchableOpacity>
+
+      {/* Kontainer untuk bagian kanan (status dan tombol hapus) */}
+      <View style={styles.rightContainer}>
         <View style={[styles.badge, isDone ? styles.badgeDone : styles.badgePending]}>
           <Text style={[styles.badgeText, isDone ? styles.badgeTextDone : styles.badgeTextPending]}>
             {isDone ? 'Done' : 'Todo'}
           </Text>
         </View>
+        {/* Tombol Hapus */}
+        <TouchableOpacity onPress={() => onDelete?.(task)} style={styles.deleteButton}>
+          <Text style={styles.deleteButtonText}>🗑️</Text>
+        </TouchableOpacity>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 }
 
@@ -78,23 +92,35 @@ const styles = StyleSheet.create({
   cardDone: { backgroundColor: '#f8fafc' },
   title: { fontSize: 16, fontWeight: '600', color: '#1e293b', marginBottom: 4 },
   strike: { textDecorationLine: 'line-through', color: '#94a3b8' },
-  desc: { color: '#475569', marginBottom: 8 }, // menambah margin bottom
-  footer: { flexDirection: 'row', alignItems: 'center' }, // Style untuk footer
+  desc: { color: '#475569', marginBottom: 8 },
+  footer: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' },
   meta: { fontSize: 12, color: '#64748b' },
   categoryBadge: {
     paddingVertical: 4,
     paddingHorizontal: 10,
     borderRadius: 8,
-    marginRight: 8, // memberi jarak antara badge dan tanggal
+    marginRight: 8,
+    marginBottom: 4, // untuk wrap
   },
   categoryText: {
     fontWeight: '600',
     fontSize: 12,
   },
-  badge: { paddingVertical: 6, paddingHorizontal: 10, borderRadius: 10, marginLeft: 12 },
+  rightContainer: { // Style baru untuk kontainer kanan
+    alignItems: 'center',
+    marginLeft: 10,
+  },
+  badge: { paddingVertical: 6, paddingHorizontal: 10, borderRadius: 10 },
   badgePending: { backgroundColor: '#fef2f2' },
   badgeDone: { backgroundColor: '#f0fdf4' },
   badgeText: { fontWeight: '700', fontSize: 12 },
-  badgeTextPending: { color: '#ef4444' }, // Warna teks untuk status
-  badgeTextDone: { color: '#22c55e' }, // Warna teks untuk status
+  badgeTextPending: { color: '#ef4444' },
+  badgeTextDone: { color: '#22c55e' },
+  deleteButton: { // Style baru untuk tombol hapus
+    marginTop: 8,
+    padding: 4,
+  },
+  deleteButtonText: { // Style baru untuk ikon hapus
+    fontSize: 20,
+  },
 });
