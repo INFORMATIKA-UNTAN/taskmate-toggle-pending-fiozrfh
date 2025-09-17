@@ -1,23 +1,41 @@
-// Import React hook
-import { useState } from 'react';
-// Komponen UI bawaan dari React Native
-import { View, Text, TextInput, Button, StyleSheet, Alert, Platform, ScrollView, KeyboardAvoidingView } from 'react-native';
-// Import helper untuk menyimpan dan memuat data dari AsyncStorage
-import { loadTasks, saveTasks } from '../src/storage/taskStorage';
-// Import UUID untuk generate ID unik
-import 'react-native-get-random-values'; // Diperlukan untuk uuid
-import { v4 as uuidv4 } from 'uuid';
-// Import Expo Router untuk navigasi
+// BAGIAN IMPORT YANG DIPERBAIKI
+import { useState, useEffect } from 'react';
+import {
+  View, Text, TextInput, Button, StyleSheet, Alert,
+  Platform, ScrollView, KeyboardAvoidingView
+} from 'react-native';
 import { useRouter } from 'expo-router';
+import 'react-native-get-random-values';
+import { v4 as uuidv4 } from 'uuid';
+import { loadTasks, saveTasks } from '../src/storage/taskStorage';
+// Import dipisah ke file yang benar
+import { loadCategories, saveCategories } from '../src/storage/categoryStorage'; 
+import { pickColor } from '../src/constants/categories';
+import { Picker } from '@react-native-picker/picker';
+import AddCategoryModal from '../src/components/AddCategoryModal';
+import { PRIORITIES } from '../src/constants/priorities';
 
+// Sisa kode di bawah ini tidak ada perubahan
 export default function AddTaskScreen() {
-  const router = useRouter(); // Hook untuk navigasi
+  const router = useRouter();
+
   const [title, setTitle] = useState('');
   const [desc, setDesc] = useState('');
+  const [deadline, setDeadline] = useState(''); 
+  const [categories, setCategories] = useState([]);
+  const [category, setCategory] = useState('Umum');
+  const [showCatModal, setShowCatModal] = useState(false);
+  const [priority, setPriority] = useState('Low');
 
-  // Fungsi yang dijalankan saat tombol "Simpan Tugas" ditekan
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const loadedCategories = await loadCategories();
+      setCategories(loadedCategories);
+    };
+    fetchCategories();
+  }, []);
+
   const handleAddTask = async () => {
-    // Validasi: Judul tidak boleh kosong
     if (!title.trim()) {
       Alert.alert('Gagal', 'Judul tugas tidak boleh kosong!');
       return;
@@ -29,18 +47,32 @@ export default function AddTaskScreen() {
         id: uuidv4(),
         title: title.trim(),
         description: desc.trim(),
-        category: 'Umum',
-        deadline: '2025-09-30',
-        // Status diatur ke 'pending' secara otomatis
-        status: 'pending', 
+        deadline: deadline.trim(),
+        category,
+        priority,
+        status: 'pending',
       };
-      const updatedTasks = [...existingTasks, newTask];
-      await saveTasks(updatedTasks);
+      await saveTasks([...existingTasks, newTask]);
       router.replace('/');
     } catch (error) {
       console.error(error);
       Alert.alert('Error', 'Gagal menyimpan tugas.');
     }
+  };
+
+  const onSubmitCategory = async ({ key, color }) => {
+    const trimmedKey = key.trim();
+    if (categories.some(c => c.key.toLowerCase() === trimmedKey.toLowerCase())) {
+      Alert.alert('Info', 'Kategori sudah ada.');
+      setShowCatModal(false);
+      return;
+    }
+    const newCategory = { key: trimmedKey, color: color || pickColor(categories.length) };
+    const nextCategories = [...categories, newCategory];
+    setCategories(nextCategories);
+    await saveCategories(nextCategories);
+    setCategory(trimmedKey);
+    setShowCatModal(false);
   };
 
   return (
@@ -52,34 +84,50 @@ export default function AddTaskScreen() {
         <Text style={styles.title}>Tambah Tugas Baru</Text>
 
         <Text style={styles.label}>Judul Tugas</Text>
-        <TextInput
-          style={styles.input}
-          value={title}
-          onChangeText={setTitle}
-          placeholder="Contoh: Belajar React Native"
-          placeholderTextColor="#94a3b8"
-        />
+        <TextInput style={styles.input} value={title} onChangeText={setTitle} placeholder="Contoh: Belajar Component" />
 
         <Text style={styles.label}>Deskripsi (Opsional)</Text>
-        <TextInput
-          style={[styles.input, styles.textArea]}
-          value={desc}
-          onChangeText={setDesc}
-          placeholder="Detail singkat mengenai tugas..."
-          placeholderTextColor="#94a3b8"
-          multiline
-          numberOfLines={4}
-        />
+        <TextInput style={[styles.input, styles.textArea]} value={desc} onChangeText={setDesc} placeholder="Detail singkat mengenai tugas..." multiline />
+        
+        <Text style={styles.label}>Deadline (YYYY-MM-DD)</Text>
+        <TextInput style={styles.input} value={deadline} onChangeText={setDeadline} placeholder="Contoh: 2025-12-31" />
+
+        <Text style={styles.label}>Kategori</Text>
+        <View style={styles.pickerWrap}>
+          <Picker selectedValue={category} onValueChange={(itemValue) => {
+            if (itemValue === '__ADD__') {
+              setShowCatModal(true);
+            } else {
+              setCategory(itemValue);
+            }
+          }}>
+            {categories.map(cat => <Picker.Item key={cat.key} label={cat.key} value={cat.key} />)}
+            <Picker.Item label="＋ Tambah Kategori Baru..." value="__ADD__" style={{ color: '#0ea5e9' }} />
+          </Picker>
+        </View>
+
+        <Text style={styles.label}>Prioritas</Text>
+        <View style={styles.pickerWrap}>
+          <Picker selectedValue={priority} onValueChange={setPriority}>
+            {PRIORITIES.map(p => <Picker.Item key={p} label={p} value={p} />)}
+          </Picker>
+        </View>
 
         <View style={styles.buttonContainer}>
           <Button title="Simpan Tugas" onPress={handleAddTask} />
         </View>
       </ScrollView>
+
+      <AddCategoryModal
+        visible={showCatModal}
+        onClose={() => setShowCatModal(false)}
+        onSubmit={onSubmitCategory}
+        suggestedColor={pickColor(categories.length)}
+      />
     </KeyboardAvoidingView>
   );
 }
 
-// Stylesheet untuk halaman
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -110,9 +158,17 @@ const styles = StyleSheet.create({
   },
   textArea: {
     height: 100,
-    textAlignVertical: 'top', // Agar teks dimulai dari atas pada Android
+    textAlignVertical: 'top',
+  },
+  pickerWrap: {
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
   },
   buttonContainer: {
-    marginTop: 24, // Memberi jarak antara input terakhir dan tombol
+    marginTop: 24,
+    marginBottom: 48,
   }
 });

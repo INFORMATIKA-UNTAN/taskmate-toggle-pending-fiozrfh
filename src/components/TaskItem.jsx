@@ -1,86 +1,206 @@
 // import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-// export default function TaskItem({ task, onToggle }) {
-// const isDone = task.status === 'done';
-// return (
-// <TouchableOpacity onPress={() => onToggle?.(task)} activeOpacity={0.7}>
-// <View style={[styles.card, isDone && styles.cardDone]}>
-// <View style={{ flex: 1 }}>
-// <Text style={[styles.title, isDone && styles.strike]}>{task.title}</Text>
-// <Text style={styles.desc}>{task.description}</Text>
-// <Text style={styles.meta}>{task.category} • Due {task.deadline}</Text>
-// </View>
-// <View style={[styles.badge, isDone ? styles.badgeDone : styles.badgePending]}>
-// <Text style={styles.badgeText}>{isDone ? 'Done' : 'Todo'}</Text>
-// </View>
-// </View>
-// </TouchableOpacity>
-// );
+// import { colorOfName } from '../constants/categories';
+// import { colorOfPriority } from '../constants/priorities';
+// import { Ionicons } from '@expo/vector-icons'; // Import Ionicons
+
+// export default function TaskItem({ task, categories, onToggle, onDelete }) {
+//   const isDone = task.status === 'done';
+//   // [UPDATE] Warna badge diambil dari util sesuai kategori & prioritas
+//   const catColor = colorOfName(task.category ?? 'Umum', categories);
+//   const prioColor = colorOfPriority(task.priority ?? 'Low');
+
+//   // [OPSIONAL] progress 0-100 → jika tidak ada, tidak akan dirender
+//   const pct = typeof task.progress === 'number' ? Math.max(0, Math.min(100, task.progress)) : null;
+
+//   return (
+//     <View style={[styles.card, isDone && styles.cardDone]}>
+//       {/* [AKSI] Ketuk area utama untuk toggle status Done/Pending */}
+//       <TouchableOpacity onPress={() => onToggle?.(task)} style={{ flex: 1 }} activeOpacity={0.8}>
+//         <Text style={[styles.title, isDone && styles.strike]}>{task.title}</Text>
+
+//         {!!task.deadline && <Text style={styles.deadline}>Deadline: {task.deadline}</Text>}
+//         {!!task.description && <Text style={styles.desc}>{task.description}</Text>}
+
+//         {/* [UPDATE] Badge untuk kategori & prioritas */}
+//         <View style={styles.badgeContainer}>
+//           <View style={[styles.badge, { borderColor: catColor, backgroundColor: `${catColor}20` }]}>
+//             <Text style={[styles.badgeText, { color: catColor }]}>{task.category ?? 'Umum'}</Text>
+//           </View>
+//           <View style={[styles.badge, { borderColor: prioColor, backgroundColor: `${prioColor}20` }]}>
+//             <Text style={[styles.badgeText, { color: prioColor }]}>{task.priority ?? 'Low'}</Text>
+//           </View>
+//         </View>
+
+//         {/* [OPSIONAL] Progress bar tipis */}
+//         {pct !== null && (
+//           <View style={styles.progressWrap}>
+//             <View style={[styles.progressBar, { width: `${pct}%` }]} />
+//             <Text style={styles.progressText}>{pct}%</Text>
+//           </View>
+//         )}
+//       </TouchableOpacity>
+
+//       {/* [AKSI] Tombol hapus task */}
+//       <TouchableOpacity onPress={() => onDelete?.(task)} style={styles.deleteButton}>
+//         <Ionicons name="trash-outline" size={22} color="#94a3b8" />
+//       </TouchableOpacity>
+//     </View>
+//   );
 // }
+
 // const styles = StyleSheet.create({
-// card: { padding: 14, borderRadius: 12, backgroundColor: '#fff', marginBottom: 10, flexDirection: 'row', alignItems: 'center', elevation: 1 },
-// cardDone: { backgroundColor: '#f1f5f9' },
-// title: { fontSize: 16, fontWeight: '600', marginBottom: 4 },
-// strike: { textDecorationLine: 'line-through', color: '#64748b' },
-// desc: { color: '#475569', marginBottom: 6 },
-// meta: { fontSize: 12, color: '#64748b' },
-// badge: { paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, marginLeft: 12 },
-// badgePending: { backgroundColor: '#fee2e2' },
-// badgeDone: { backgroundColor: '#dcfce7' },
-// badgeText: { fontWeight: '700', fontSize: 12 },
+//   card: {
+//     padding: 14, borderRadius: 16, backgroundColor: '#fff', marginBottom: 12,
+//     flexDirection: 'row', alignItems: 'flex-start', // Diubah ke flex-start
+//     borderWidth: 1, borderColor: '#e2e8f0',
+//     // [STYLE] Shadow lembut
+//     shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, shadowOffset: { width: 0, height: 3 },
+//     elevation: 2,
+//   },
+//   cardDone: { backgroundColor: '#f8fafc' },
+//   title: { fontSize: 16, fontWeight: '700', marginBottom: 4, color: '#0f172a' },
+//   strike: { textDecorationLine: 'line-through', color: '#64748b' },
+//   deadline: { fontSize: 12, color: '#334155', marginBottom: 4 },
+//   desc: { color: '#475569' },
+//   badgeContainer: { 
+//     flexDirection: 'row', 
+//     gap: 8, 
+//     marginTop: 10 
+//   },
+//   badge: { 
+//     alignSelf: 'flex-start', 
+//     paddingVertical: 4, 
+//     paddingHorizontal: 10, 
+//     borderRadius: 999, 
+//     borderWidth: 1 
+//   },
+//   badgeText: { 
+//     fontSize: 12, 
+//     fontWeight: '700' 
+//   },
+//   progressWrap: { 
+//     marginTop: 12, 
+//     height: 8, 
+//     backgroundColor: '#e5e7eb', 
+//     borderRadius: 999, 
+//     overflow: 'hidden', 
+//     position: 'relative' 
+//   },
+//   progressBar: { 
+//     height: '100%', 
+//     backgroundColor: '#0f172a' 
+//   },
+//   progressText: { 
+//     position: 'absolute', 
+//     right: 8, 
+//     top: -18, 
+//     fontSize: 12, 
+//     color: '#334155', 
+//     fontWeight: '600' 
+//   },
+//   deleteButton: {
+//     padding: 4,
+//     marginLeft: 8,
+//   }
 // });
 
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+// src/components/TaskItem.jsx
 
-// Fungsi untuk menentukan warna badge berdasarkan kategori (dipertahankan)
-const getCategoryStyle = (category) => {
-  switch (category) {
-    case 'Mobile':
-      return { backgroundColor: '#e0f2fe', color: '#0ea5e9' }; // Biru Muda
-    case 'RPL':
-      return { backgroundColor: '#dcfce7', color: '#22c55e' }; // Hijau Muda
-    case 'IoT':
-      return { backgroundColor: '#ffedd5', color: '#f97316' }; // Oranye Muda
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { colorOfName } from '../constants/categories';
+import { metaOfPriority } from '../constants/priorities'; 
+import { Ionicons } from '@expo/vector-icons';
+
+function formatDeadline(deadline) {
+  if (!deadline || deadline.length < 10) return null;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const parts = deadline.split('-');
+  const deadlineDate = new Date(parts[0], parts[1] - 1, parts[2]);
+  deadlineDate.setHours(0, 0, 0, 0);
+
+  if (isNaN(deadlineDate)) return null;
+
+  const diffTime = deadlineDate - today;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) {
+    return { text: 'Overdue', color: '#ef4444' };
+  }
+  if (diffDays === 0) {
+    return { text: 'Hari ini', color: '#f59e0b' };
+  }
+  return { text: `Sisa ${diffDays} hari`, color: '#64748b' };
+}
+
+// Helper untuk mendapatkan teks dan warna untuk badge status
+const getStatusMeta = (status) => {
+  switch (status) {
+    case 'inprogress':
+      return { text: 'In Progress', color: '#0ea5e9', bgColor: '#f0f9ff' }; // Biru
+    case 'done':
+      return { text: 'Done', color: '#16a34a', bgColor: '#f0fdf4' }; // Hijau
+    case 'pending':
     default:
-      return { backgroundColor: '#e2e8f0', color: '#475569' }; // Abu-abu (Umum)
+      return { text: 'Pending', color: '#f59e0b', bgColor: '#fefce8' }; // Kuning
   }
 };
 
-// Komponen TaskItem sekarang menerima prop onDelete
-export default function TaskItem({ task, onToggle, onDelete }) {
+export default function TaskItem({ task, categories, onToggle, onDelete }) {
   const isDone = task.status === 'done';
-  // Menggunakan fallback 'Umum' jika kategori tidak ada
-  const categoryName = task.category ?? 'Umum';
-  const categoryStyle = getCategoryStyle(categoryName);
+  const catColor = colorOfName(task.category ?? 'Umum', categories);
+  
+  const prioMeta = metaOfPriority(task.priority ?? 'Low');
+  const prioColor = prioMeta.color;
+
+  const statusInfo = getStatusMeta(task.status);
+  // Warna latar: jika done -> abu redup; jika inprogress -> biru; jika pending -> warna prioritas
+  const cardBgColor = isDone ? '#f8fafc' : (task.status === 'inprogress' ? statusInfo.bgColor : prioMeta.bgColor);
+  
+  const pct = typeof task.progress === 'number' ? Math.max(0, Math.min(100, task.progress)) : null;
+
+  const deadlineInfo = formatDeadline(task.deadline);
 
   return (
-    <View style={[styles.card, isDone && styles.cardDone]}>
-      {/* Bagian utama yang bisa diklik untuk toggle status */}
-      <TouchableOpacity onPress={() => onToggle?.(task)} style={{ flex: 1 }} activeOpacity={0.7}>
+    <View style={[styles.card, { backgroundColor: cardBgColor }]}>
+      <TouchableOpacity onPress={() => onToggle?.(task)} style={{ flex: 1 }} activeOpacity={0.8}>
         <Text style={[styles.title, isDone && styles.strike]}>{task.title}</Text>
         
-        {/* Deskripsi hanya ditampilkan jika ada isinya */}
-        {!!task.description && (
-          <Text style={styles.desc}>{task.description}</Text>
+        {deadlineInfo && !isDone && (
+          <Text style={[styles.deadline, { color: deadlineInfo.color }]}>
+            Deadline: {task.deadline} ({deadlineInfo.text})
+          </Text>
         )}
+        
+        {!!task.description && <Text style={[styles.desc, {marginTop: deadlineInfo ? 4 : 0 }]}>{task.description}</Text>}
 
-        <View style={styles.footer}>
-          <View style={[styles.categoryBadge, { backgroundColor: categoryStyle.backgroundColor }]}>
-            <Text style={[styles.categoryText, { color: categoryStyle.color }]}>{categoryName}</Text>
+        <View style={styles.badgeContainer}>
+          <View style={[styles.badge, { borderColor: catColor, backgroundColor: `${catColor}20` }]}>
+            <Text style={[styles.badgeText, { color: catColor }]}>{task.category ?? 'Umum'}</Text>
           </View>
-          <Text style={styles.meta}>Due {task.deadline}</Text>
+          <View style={[styles.badge, { borderColor: prioColor, backgroundColor: `${prioColor}20` }]}>
+            <Text style={[styles.badgeText, { color: prioColor }]}>{task.priority ?? 'Low'}</Text>
+          </View>
         </View>
+
+        {pct !== null && (
+          <View style={styles.progressWrap}>
+            <View style={[styles.progressBar, { width: `${pct}%` }]} />
+            <Text style={styles.progressText}>{pct}%</Text>
+          </View>
+        )}
       </TouchableOpacity>
 
-      {/* Kontainer untuk bagian kanan (status dan tombol hapus) */}
       <View style={styles.rightContainer}>
-        <View style={[styles.badge, isDone ? styles.badgeDone : styles.badgePending]}>
-          <Text style={[styles.badgeText, isDone ? styles.badgeTextDone : styles.badgeTextPending]}>
-            {isDone ? 'Done' : 'Todo'}
+        <View style={[styles.statusBadge, { backgroundColor: `${statusInfo.color}20` }]}>
+          <Text style={[styles.badgeText, { color: statusInfo.color }]}>
+            {statusInfo.text}
           </Text>
         </View>
-        {/* Tombol Hapus */}
         <TouchableOpacity onPress={() => onDelete?.(task)} style={styles.deleteButton}>
-          <Text style={styles.deleteButtonText}>🗑️</Text>
+          <Ionicons name="trash-outline" size={22} color="#94a3b8" />
         </TouchableOpacity>
       </View>
     </View>
@@ -88,39 +208,40 @@ export default function TaskItem({ task, onToggle, onDelete }) {
 }
 
 const styles = StyleSheet.create({
-  card: { padding: 14, borderRadius: 12, backgroundColor: '#fff', marginBottom: 10, flexDirection: 'row', alignItems: 'center', elevation: 1 },
-  cardDone: { backgroundColor: '#f8fafc' },
-  title: { fontSize: 16, fontWeight: '600', color: '#1e293b', marginBottom: 4 },
-  strike: { textDecorationLine: 'line-through', color: '#94a3b8' },
-  desc: { color: '#475569', marginBottom: 8 },
-  footer: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' },
-  meta: { fontSize: 12, color: '#64748b' },
-  categoryBadge: {
-    paddingVertical: 4,
+  card: {
+    padding: 14, borderRadius: 16, marginBottom: 12,
+    flexDirection: 'row', alignItems: 'flex-start',
+    borderWidth: 1, borderColor: '#e2e8f0',
+    shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
+  },
+  title: { fontSize: 16, fontWeight: '700', marginBottom: 4, color: '#0f172a' },
+  strike: { textDecorationLine: 'line-through', color: '#64748b' },
+  deadline: { fontSize: 12, fontWeight: '600', marginBottom: 6 },
+  desc: { color: '#475569' },
+  badgeContainer: { flexDirection: 'row', gap: 8, marginTop: 10 },
+  badge: { alignSelf: 'flex-start', paddingVertical: 4, paddingHorizontal: 10, borderRadius: 999, borderWidth: 1 },
+  badgeText: { fontSize: 12, fontWeight: '700' },
+  statusBadge: {
+    alignSelf: 'center',
+    paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 8,
-    marginRight: 8,
-    marginBottom: 4, // untuk wrap
   },
-  categoryText: {
-    fontWeight: '600',
-    fontSize: 12,
-  },
-  rightContainer: { // Style baru untuk kontainer kanan
+  rightContainer: {
     alignItems: 'center',
     marginLeft: 10,
+    justifyContent: 'space-between',
+    minHeight: 50,
   },
-  badge: { paddingVertical: 6, paddingHorizontal: 10, borderRadius: 10 },
-  badgePending: { backgroundColor: '#fef2f2' },
-  badgeDone: { backgroundColor: '#f0fdf4' },
-  badgeText: { fontWeight: '700', fontSize: 12 },
-  badgeTextPending: { color: '#ef4444' },
-  badgeTextDone: { color: '#22c55e' },
-  deleteButton: { // Style baru untuk tombol hapus
-    marginTop: 8,
-    padding: 4,
+  deleteButton: { padding: 4, },
+  progressWrap: { 
+    marginTop: 12, height: 8, backgroundColor: '#e5e7eb', borderRadius: 999, 
+    overflow: 'hidden', position: 'relative' 
   },
-  deleteButtonText: { // Style baru untuk ikon hapus
-    fontSize: 20,
+  progressBar: { height: '100%', backgroundColor: '#0f172a' },
+  progressText: { 
+    position: 'absolute', right: 8, top: -18, fontSize: 12, 
+    color: '#334155', fontWeight: '600' 
   },
 });
