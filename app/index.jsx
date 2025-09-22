@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { SafeAreaView, Text, FlatList, StyleSheet, View, Button, Alert } from 'react-native';
+import { SafeAreaView, Text, SectionList, StyleSheet, View, Button, Alert } from 'react-native';
 import TaskItem from '../src/components/TaskItem';
 import FilterToolbarFancy from '../src/components/FilterToolbarFancy';
 import AddCategoryModal from '../src/components/AddCategoryModal';
@@ -24,7 +24,6 @@ export default function HomeScreen() {
     init();
   }, []);
 
-  // Logika handleToggle untuk alur siklus
   const handleToggle = async (task) => {
     let newStatus = task.status;
     switch (task.status) {
@@ -34,7 +33,6 @@ export default function HomeScreen() {
       case 'inprogress':
         newStatus = 'done';
         break;
-      // [UBAH] Jika status 'done', kembalikan ke 'pending' untuk membuat siklus
       case 'done':
         newStatus = 'pending'; 
         break;
@@ -107,6 +105,26 @@ export default function HomeScreen() {
     });
   }, [filteredTasks]);
   
+  const sections = useMemo(() => {
+    const grouped = sortedTasks.reduce((acc, task) => {
+      const category = task.category || 'Umum';
+      if (!acc[category]) {
+        acc[category] = [];
+      }
+      acc[category].push(task);
+      return acc;
+    }, {});
+    
+    if (categoryFilter !== 'all') {
+      return grouped[categoryFilter] ? [{ title: categoryFilter, data: grouped[categoryFilter] }] : [];
+    }
+
+    return Object.keys(grouped).map(key => ({
+      title: key,
+      data: grouped[key],
+    }));
+  }, [sortedTasks, categoryFilter]);
+
   const handleSubmitCategory = async (cat) => {
     if (categories.some(c => c.key.toLowerCase() === cat.key.toLowerCase())) {
       Alert.alert('Info', 'Nama kategori sudah ada.');
@@ -144,11 +162,14 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      <FlatList
-        data={sortedTasks}
+      <SectionList
+        sections={sections}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TaskItem task={item} categories={categories} onToggle={handleToggle} onDelete={handleDelete} />
+        )}
+        renderSectionHeader={({ section: { title } }) => (
+          <Text style={styles.sectionHeader}>{title}</Text>
         )}
         ListEmptyComponent={<Text style={styles.emptyText}>Tidak ada tugas yang cocok</Text>}
         contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8 }}
@@ -167,6 +188,15 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
   header: { fontSize: 20, fontWeight: '700', padding: 16, paddingBottom: 8 },
+  sectionHeader: { 
+    fontSize: 16, 
+    fontWeight:'800', 
+    color:'#0f172a', 
+    marginTop: 12, 
+    marginBottom: 8, 
+    textTransform: 'uppercase',
+    paddingHorizontal: 8
+  },
   toolbar: {
     backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#e2e8f0',
     padding: 12, gap: 8

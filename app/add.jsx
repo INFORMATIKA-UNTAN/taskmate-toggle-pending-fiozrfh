@@ -1,4 +1,3 @@
-// BAGIAN IMPORT YANG DIPERBAIKI
 import { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, Button, StyleSheet, Alert,
@@ -8,14 +7,12 @@ import { useRouter } from 'expo-router';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 import { loadTasks, saveTasks } from '../src/storage/taskStorage';
-// Import dipisah ke file yang benar
 import { loadCategories, saveCategories } from '../src/storage/categoryStorage'; 
 import { pickColor } from '../src/constants/categories';
 import { Picker } from '@react-native-picker/picker';
 import AddCategoryModal from '../src/components/AddCategoryModal';
 import { PRIORITIES } from '../src/constants/priorities';
 
-// Sisa kode di bawah ini tidak ada perubahan
 export default function AddTaskScreen() {
   const router = useRouter();
 
@@ -51,8 +48,18 @@ export default function AddTaskScreen() {
         category,
         priority,
         status: 'pending',
+        // [TAMBAHAN] Tambahkan progress default
+        progress: 0, 
       };
       await saveTasks([...existingTasks, newTask]);
+      
+      // [TAMBAHAN] Reset form setelah berhasil menyimpan
+      setTitle('');
+      setDesc('');
+      setDeadline('');
+      setCategory('Umum');
+      setPriority('Low');
+
       router.replace('/');
     } catch (error) {
       console.error(error);
